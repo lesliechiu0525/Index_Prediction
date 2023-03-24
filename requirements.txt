@@ -1,4 +1,9 @@
+statsmodels
+tushare
+matplotlib
+seaborn
 pymysql
 sqlalchemy
 pandas
 numpy
+sklearn
