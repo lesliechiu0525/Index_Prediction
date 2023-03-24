@@ -1,98 +1,73 @@
-''' 用于用户注册和登录的系统'''
-import warnings
 import pandas as pd
 import numpy as np
+from sqlalchemy import create_engine
 import hashlib
-from pandas.core.common import SettingWithCopyWarning
-warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
 
-class Log_System:
-    def __init__(self,size):
-        self.size = size
-        self.slots = [None]*size
-        self.values = [None]*size
+'''用于与服务器账户表连接'''
+class Account:
+    def __init__(self):
+        self.engine = None
+        self.data = None
 
-    def load(self):
-        import pandas as pd
-        df=pd.read_csv("user.csv")#从数据库导入数据到此instance
-        self.slots=df["slots"].to_list()
-        self.values=df['values'].to_list()
-        #这里数据库还没有做 可以做一个excel或者csv暂时代替数据库
+    def log(self, username, password, ip, database):
+        engine = create_engine(f'mysql+pymysql://{username}:{password}@{ip}/{database}', echo=False)
+        self.engine = engine
+
+    def download(self, table_name):
+        df = pd.read_sql_table(table_name, self.engine)
+        self.data = df
         return df
 
-    def create(self,*args):#新建账号
-        df=self.load()
-        newusername,newuserpassword=args
-        userindex=""
-        userindex=int(np.exp(sum([ord(i) for i in newusername])))%self.size
-        temp1=hashlib.md5()
-        temp1.update(newuserpassword.encode('utf-8'))
-        userpassword=temp1.hexdigest()
-        if not self.slots[userindex]:
-            print("Username already used.Try another one")
-        else:
-            self.slots[userindex]=userindex
-            self.values[userindex]=userpassword#用户名与密码混淆完成
-            df["slots"][userindex]=self.slots[userindex]
-            df["values"][userindex]=self.values[userindex]
-            df.to_csv("user.csv",index=False)
-    #存入instance
-        #确认后保存至本地数据库
+    def upload(self, table_name, new_table):
+        new_table.to_sql(table_name, self.engine, if_exists='replace', index=False)
 
-    def login(self,*args):#登录
-        import numpy as np
-        username,password=args
-        userindex=int(np.exp(sum([ord(i) for i in username])))%self.size
-        df=self.load()
-        import hashlib
-        temp1=hashlib.md5()
-        temp1.update(password.encode('utf-8'))
-        password=temp1.hexdigest()
-        if df["values"][userindex]!=password:
-            print("Wrong Password or not signed up.")
-            return False
-        else:
-            print("Logged in.")
-            return True
-        #先check username在不在slots 再check password的hashvalue与该索引位置\
-        #的values相不相等
+    def exit(self):
+        self.engine.dispose()
 
-    def update(self,*args): #修改用户名和密码
-        import numpy as np
-        username,newpassword,password=args
-        df=self.load()
-        userindex=int(np.exp(sum([ord(i) for i in username])))%self.size
-        import hashlib
-        temp1=hashlib.md5()
-        temp1.update(password.encode('utf-8'))
-        password=temp1.hexdigest()
-        temp2=hashlib.md5()
-        temp2.update(newpassword.encode('utf-8'))
-        newpassword=temp2.hexdigest()
-        if userindex in df["slots"]:
-            if password==df["values"][userindex]:
-                df["values"][userindex]==newpassword
-                df.to_csv("user.csv",index=False)
-            else:
-                print("Wrong password.")
+'''本地化登录系统'''
+class Log_System:
+    def __init__(self):
+        self.size = None
+        self.slots = None
+        self.values = None
+        self.index = None
+
+    def load(self, df):
+        self.size = df.shape[0]
+        self.slots = list(df['user'])
+        self.values = list(df['password_hash'])
+
+    def HashFunction(self, x):  # 用于search
+        hashvalue = int(sum([np.exp(ord(i)) for i in x])) % self.size
+        return hashvalue
+
+    def create(self, *args):  # 新建账号
+        user, password = str(args[0]), str(args[0]).encode()
+        hash_user = self.HashFunction(user)
+        while self.slots[hash_user] != 1:
+            user = input('该用户名已经存在,请重新输入(密码不需要重新输入):')
+            hash_user = self.HashFunction(user)
+        print('该用户名可用,创建成功')
+        self.slots[hash_user] = user
+        self.values[hash_user] = hashlib.sha256(password).hexdigest()
+
+    def login(self, *args):  # 登录
+        user, password = str(args[0]), str(args[1]).encode()
+        hash_user = self.HashFunction(user)
+        if self.slots[hash_user] == 1:
+            print('用户名不存在，登录失败')
         else:
-            print("User not signed up.")
-    def delete(self,*args):
-        import numpy as np
-        username,password=args
-        userindex=int(np.exp(sum([ord(i) for i in username])))%self.size
-        df=self.load()
-        import hashlib
-        temp1=hashlib.md5()
-        temp1.update(password.encode('utf-8'))
-        password=temp1.hexdigest()
-        if df["values"][userindex]!=password:
-            print("Wrong password. Access Denied.")
-        else:
-            a=input("Do you really want to delete account? If yes, press Y, else, press other keys.")
-            if a=="Y":
-                df["values"][userindex]=None
-                df["slots"][userindex]=None
-                df.to_csv("user.csv",index=False)
+            if hashlib.sha256(password).hexdigest() == self.values[hash_user]:
+                print('密码错误,登录失败')
             else:
-                print("Process aborted.")
+                print('登录成功')
+                self.index = hash_user
+
+    def update(self, new_password):  # 修改用户名和密码
+        try:
+            self.values[self.index] = hashlib.sha256(new_password).hexdigest()
+        except:
+            raise IndexError('修改失败,请先登录')
+
+    def delete(self, *args):  # 用于管理员管理账号 暂时不需要
+        pass
