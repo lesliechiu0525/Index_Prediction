@@ -4,18 +4,19 @@ from sqlalchemy import create_engine
 import hashlib
 
 '''用于与服务器账户表连接'''
-class Account:
+class Bridge:
     def __init__(self):
         self.engine = None
-        self.data = None
+        self.status = False
 
     def log(self, username, password, ip, database):
         engine = create_engine(f'mysql+pymysql://{username}:{password}@{ip}/{database}', echo=False)
         self.engine = engine
+        print('The bridge is open')
+        self.status = True
 
     def download(self, table_name):
         df = pd.read_sql_table(table_name, self.engine)
-        self.data = df
         return df
 
     def upload(self, table_name, new_table):
@@ -23,6 +24,8 @@ class Account:
 
     def exit(self):
         self.engine.dispose()
+        print('The bridge is down')
+        self.status = False
 
 '''本地化登录系统'''
 class Log_System:

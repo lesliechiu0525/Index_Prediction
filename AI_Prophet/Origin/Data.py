@@ -1,49 +1,66 @@
-import tushare as ts
-import time
 import pandas as pd
-import matplotlib.pyplot as mp
+from pylab import plt, mpl
 import numpy as np
+plt.style.use("seaborn")
+mpl.rcParams['font.family'] = 'serif'
+from statsmodels.graphics.tsaplots import plot_acf
 class DataLoader:
-    def __init__(self,token):
+    def __init__(self):
         self.data=None
-        self.token=token #token私有
-        ts.set_token(self.token)
+        self.bridge=None
+    def set_bridge(self,bridge):
+        self.bridge=bridge
+
     def fetch_data(self):
-        # 获取时间 然后把数据从tushare导入到data属性
-        enddate=str(time.strftime("%Y-%m-%d",time.localtime())).replace("-","")
-        startdate=enddate[0:2]+str(int(enddate[2:4])-2)+enddate[4:8]
-        self.data=(ts.pro_bar(ts_code='000001.SH', asset='I', start_date=startdate, end_date=enddate)).iloc[::-1,:].reset_index(drop=True)
-        pass
+        data=self.bridge.download(table_name='IndexDaily').reset_index(drop=True)
+        data['trade_date']=pd.to_datetime(data['trade_date'])
+        data['return'] = data['close']/data.shift(1)['close']
+        self.data=data
+        self.bridge.exit()
+        return data
 
-    def basic_plot(self): #画近期行情
-        temp=self.data["trade_date"].to_list()
-        mp.rcParams['font.sans-serif'] = ['SimHei']
-        mp.figure(dpi=40, facecolor="white", figsize=(13, 13))
-        mp.subplot(311)
-        mp.title("上证指数近两年走势")
-        length=self.data.shape[0]
-        numbers=np.arange(length)
-        mp.plot(numbers,self.data['close'])
-        mp.xticks(numbers[::30],(pd.to_datetime(np.array(self.data.trade_date, dtype="U8")[::30])).date,rotation=30)
-        mp.subplot(312)
-        mp.title("成交量")
-        mp.bar(numbers,self.data['vol'],width=1)
-        mp.xticks(numbers[::30], (pd.to_datetime(np.array(self.data.trade_date, dtype="U8")[::30])).date,rotation=30)
-        mp.subplot(313)
-        mp.title('上证指数近60交易日走势')
-        mask = self.data[-60:].close > self.data[-60:].open
-        colors = np.zeros(mask.size, dtype="U5")
-        colors[:] = "green"
-        colors[mask] = "red"
-        mp.bar(np.arange(60),(self.data.close[-60:]-self.data.open[-60:]),bottom=self.data.open[-60:],color=colors,width=1)
-        mp.vlines(np.arange(60),self.data.low[-60:],self.data.high[-60:],color=colors)
-        mp.xticks(np.arange(60)[::5],(pd.to_datetime(np.array(self.data.trade_date[-60:], dtype="U8")[::5])).date, rotation=30)
-        mp.show()
-        pass
+    def basic_plot(self,method): #画近期行情
+        data=self.data.copy()
+        data.index=data['trade_date']
+        data['MA5'] = data['close'].rolling(5).mean()
+        data['MA10'] = data['close'].rolling(10).mean()
+        data['MA120'] = data['close'].rolling(120).mean()
+        if method=='performance':
+            plt.subplot(211)
+            plt.title("000001SH Performance Daily")
+            data['close'].plot(label='close')
+            plt.subplot(212)
+            plt.title('000001SH Performance Annual')
+            y=data['return'].resample('Y').prod()
+            x=[i.strftime('%Y')[-2:] for i in y.index]
+            plt.bar(x,y-1)
+            plt.subplots_adjust(hspace=1)
+            plt.show()
 
-    def reshape(self,*args): #根据模型reshape data格式
+        elif method=='analysis':
+            plt.subplot(211)
+            plt.title("000001SH Momentum in 2023")
+            data['2023']['close'].plot(label='close')
+            data['2023']['MA5'].plot(label='MA5')
+            data['2023']['MA10'].plot(label='MA10')
+            data['2023']['MA120'].plot(label='MA120')
+            plt.legend()
+            plt.subplot(212)
+            plt.title('000001SH Volatility Week in 2023')
+            y=data['2023']['return'].resample('W').std()
+            plt.bar(range(len(y)),y)
+            plt.subplots_adjust(hspace=1)
+            plt.show()
+        elif method=='ACF':
+            monthly_return=data['return'].resample('M').prod()
+            plot_acf(monthly_return)
+            plt.show()
+
+    def reshape(self): #根据模型reshape data格式
+        data=self.data.copy()
+        data.reset_index(drop=True)
+
         pass
 
     def get_data(self):
-        pass
         return self.data
