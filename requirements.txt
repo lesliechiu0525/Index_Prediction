@@ -7,3 +7,4 @@ sqlalchemy
 pandas
 numpy
 sklearn
+torch
