@@ -165,7 +165,7 @@ def Train(net,data_loader,num_epoch):
         print(f'epoch:{epoch+1},loss:{train_loss[-1]:f}')
 
 '''Simple MLP'''
-class MLP(nn.Modules):
+class MLP(nn.modules):
     def __init__(self,input_size):
         super().__init__()
         self._modules[0]=nn.Linear(input_size,128)
@@ -181,7 +181,75 @@ class MLP(nn.Modules):
             x = block(x)
             if idx != 4:
                 x = self.activation(x)
-
+'''RNN'''
 class RNN(nn.Module):
-    pass
+    def __init__(self,input_size,hidden_size,output_size):
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.output_size = output_size
+        '''define the h c parameter'''
+        self.Whx = nn.Parameter(torch.randn(input_size,hidden_size))
+        self.Whh = nn.Parameter(torch.randn(hidden_size,hidden_size))
+        self.bh = nn.Parameter(torch.zeros(hidden_size))
+        self.Wch = nn.Parameter(torch.randn(hidden_size,output_size))
+        self.Wcx = nn.Parameter(torch.randn(input_size,output_size))
+        self.bc = nn.Parameter(torch.zeros(output_size))
 
+    def init_h(self,batch_size):
+        return torch.zeros(batch_size,self.hidden_size,requires_grad=True)
+
+    def forward(self,x): #many to one
+        batch_size = x.size(0)
+        h = self.init_h(batch_size=batch_size)
+        c_out , h_out = torch.ones((batch_size,x.size(1),self.input_size))
+        for t in x.size(1):
+            h = torch.tanh(x[:,t,:]@self.Whx + h@self.Whh + self.bh)
+            c = x[:,t,:]@self.Wcx + h@self.Wch + self.bc
+            c_out[:,t,:],h_out[:,t,:] = c,h
+        return c_out,h_out
+
+
+'''LSTM'''
+class LSTM(nn.Module):
+    def __init__(self,input_size,hidden_size,output_size):
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.output_size = output_size
+        '''define gate '''
+
+        '''forget gate'''
+        self.Wfh = nn.Parameter(torch.randn(hidden_size,hidden_size))
+        self.Wfx = nn.Parameter(torch.randn(input_size, hidden_size))
+        self.bf = nn.Parameter(torch.zeros(hidden_size))
+        '''input gate '''
+        self.Wih = nn.Parameter(torch.randn(hidden_size,hidden_size))
+        self.Wix = nn.Parameter(torch.randn(input_size, hidden_size))
+        self.bi = nn.Parameter(torch.zeros(hidden_size))
+        '''output  gate'''
+        self.Woh = nn.Parameter(torch.randn(hidden_size, hidden_size))
+        self.Wox = nn.Parameter(torch.randn(input_size, hidden_size))
+        self.bo = nn.Parameter(torch.zeros(hidden_size))
+
+        '''cell status'''
+        self.Wch = nn.Parameter(torch.randn(hidden_size, output_size))
+        self.Wcx = nn.Parameter(torch.randn(input_size, output_size))
+        self.bc = nn.Parameter(torch.zeros(output_size))
+
+    def init_h(self,batch_size):
+        return torch.zeros(batch_size,self.hidden_size,requires_grad=True),\
+    torch.zeros(batch_size,self.output_size,requires_grad=True)
+    def forward(self,x):
+        batch_size = x.size(0)
+        h, c = self.init_h(batch_size)
+        c_out , h_out = torch.ones((batch_size,self.hidden_size,self.input_size)), \
+                        torch.ones((batch_size, self.hidden_size, self.input_size))
+        for t in x.size(1):
+            '''the gate value'''
+            f = torch.sigmoid(x[:,t,:]@self.Wfx + h@self.Wfh + self.bf)
+            i = torch.sigmoid(x[:,t,:]@self.Wix + h@self.Wih + self.bi)
+            o = torch.sigmoid(x[:,t,:]@self.Wox + h@self.Woh + self.bo)
+            '''new t statu update'''
+            g = x[:,t,:]@self.Wcx + h@self.Wch + self.bc
+            c = f*c + i*g
+            h = (1-o)*h + o*c
+            c_out[:,t,:],h_out[:,t,:] = c,h
