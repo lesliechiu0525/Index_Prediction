@@ -58,11 +58,10 @@ class DataLoader:
             return fig
 
         elif method=='ACF':
-            fig = plt.figure
+            fig = plt.figure()
             monthly_return=data['return'].resample('M').prod()
             plot_acf(monthly_return)
-            plt.show()
-            return fig
+            return plot_acf(monthly_return)
 
     def reshape(self): #根据模型reshape data格式
         data=self.data.copy()

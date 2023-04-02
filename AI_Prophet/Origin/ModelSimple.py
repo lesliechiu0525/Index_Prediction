@@ -73,7 +73,7 @@ class Model:
         opt = torch.optim.Adam(net.parameters(),LR)
         train_loss = list()
         for epoch in range(EPOCH_NUM):
-            l = loss(net(x),y).sum()
+            l = loss(net(x),y).mean()
             train_loss.append(l.item())
             opt.zero_grad()
             l.backward()
@@ -83,9 +83,24 @@ class Model:
         self.instance = net
         pred = net(x_val)[-1]
         return net,train_loss,pred.item()
-
-def ModelUniverse(data,model_type,param):
-    model = Model()
-    model.set(model_type,data)
-    net,train_loss,pred=model.train(**param)
-    return net,train_loss,pred
+class ModelUniverse:
+    def __init__(self):
+        self.model = None
+        self.data = None
+        self.model_type = None
+    def set(self,data):
+        self.data = data['return']
+    def func(self,model_type,EPOCH_NUM,LR):
+        data = self.data.copy()
+        self.model = Model()
+        self.model.set(model_type,self.data)
+        net,train_loss,pred = self.model.train(EPOCH_NUM,LR)
+        fig = plt.figure()
+        plt.title('Loss Figure')
+        plt.xlabel('EPOCH')
+        plt.ylabel('LOSS')
+        plt.yscale('log')
+        plt.plot(range(len(train_loss)), train_loss)
+        alist=['市场将呈现积极的走势','市场将保持稳定','市场可能面临一些挑战']
+        reply = (lambda x:alist[0] if x>1.1 else alist[2] if x<0.9 else alist[1])(pred)
+        return fig,reply

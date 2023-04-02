@@ -2,9 +2,9 @@ import numpy as np
 import warnings
 warnings.filterwarnings('ignore')
 import pandas as pd
-from log import Log_System,Bridge
-from Data import DataLoader
-# from Origin.ModelSimple import ModelUniverse
+from Origin.log import Log_System,Bridge
+from Origin.Data import DataLoader
+from Origin.ModelSimple import ModelUniverse
 import gradio as gr
 log_info={
     "username":'adim',
@@ -23,14 +23,8 @@ index_bridge=Bridge()
 index_bridge.log(**info)
 dataloader.set_bridge(index_bridge)
 df = dataloader.fetch_data()
-
-def flip_text(x):
-    return x[::-1]
-
-
-def flip_image(x):
-    return np.fliplr(x)
-
+model_universe = ModelUniverse()
+model_universe.set(df)
 
 with gr.Blocks() as demo:
     gr.Markdown("<h1><center>AI_Prophet is All You Need In Investment</center></h1>")
@@ -40,15 +34,22 @@ with gr.Blocks() as demo:
         plot_output = gr.Plot()
         plot_button = gr.Button("Plot")
     with gr.Tab("Model Prediction"):
-        with gr.Row():
-            image_input = gr.Image()
-            image_output = gr.Image()
+        choice = ['Linear','RNN','GRU','LSTM']
+        Type_input = gr.Radio(choices=choice,label='ModelType')
+        Epoch_input = gr.Slider(minimum=101,maximum=1001,label='EPOCH')
+        LR_input = gr.Slider(minimum=0.001,maximum=0.1,label='LearningRate')
+        Loss_output = gr.Plot(label='Loss Figure')
+        Pre_output = gr.Text(label='Predict')
         image_button = gr.Button("Predict")
 
     with gr.Accordion("Open for More!"):
         gr.Markdown("Look at me...")
     plot_button.click(dataloader.basic_plot, inputs=method_input, outputs=plot_output)
-    image_button.click(flip_image, inputs=image_input, outputs=image_output)
+    image_button.click(model_universe.func, \
+                       inputs=[Type_input,Epoch_input,LR_input],\
+                       outputs=[Loss_output,Pre_output])
 if __name__=='__main__':
     demo.title = "AI_Prophet 🤖"
-    demo.launch(auth=('lesleichiu','0525'))
+    demo.launch()
+    # demo.launch(server_name="0.0.0.0", server_port=7860, \
+    #              share=False,auth=('lesliechiu','0525'))
