@@ -1,11 +1,17 @@
+import warnings
+warnings.filterwarnings('ignore')
 from Origin.log import Log_System,Bridge
 from Origin.Data import DataLoader
-from Origin.Model import Model
+from Origin.ModelSimple import ModelUniverse
 log_info={
     "username":'adim',
     'password':'Xiao15825982477#',
     'ip':'47.93.17.235',
     'database':'Account'
+}
+param={
+    'EPOCH_NUM': 1000,
+    'LR': 0.01
 }
 import time
 if __name__=='__main__':
@@ -16,6 +22,5 @@ if __name__=='__main__':
     index_bridge.log(**info)
     dataloader.set_bridge(index_bridge)
     df=dataloader.fetch_data()
-    dataloader.basic_plot(method='performance')
-    dataloader.basic_plot(method='analysis')
-    dataloader.basic_plot(method='ACF')
+    net,train_loss,pred = ModelUniverse(df['return'],'LSTM',param)
+    print(pred)

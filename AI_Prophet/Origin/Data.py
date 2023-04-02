@@ -14,18 +14,20 @@ class DataLoader:
     def fetch_data(self):
         data=self.bridge.download(table_name='IndexDaily').reset_index(drop=True)
         data['trade_date']=pd.to_datetime(data['trade_date'])
+        data.index = data['trade_date']
         data['return'] = data['close']/data.shift(1)['close']
+        data.dropna(how='any',inplace=True)
         self.data=data
         self.bridge.exit()
         return data
 
     def basic_plot(self,method): #画近期行情
         data=self.data.copy()
-        data.index=data['trade_date']
         data['MA5'] = data['close'].rolling(5).mean()
         data['MA10'] = data['close'].rolling(10).mean()
         data['MA120'] = data['close'].rolling(120).mean()
         if method=='performance':
+            fig = plt.figure()
             plt.subplot(211)
             plt.title("000001SH Performance Daily")
             data['close'].plot(label='close')
@@ -35,9 +37,11 @@ class DataLoader:
             x=[i.strftime('%Y')[-2:] for i in y.index]
             plt.bar(x,y-1)
             plt.subplots_adjust(hspace=1)
-            plt.show()
+            # plt.show()
+            return fig
 
         elif method=='analysis':
+            fig = plt.figure()
             plt.subplot(211)
             plt.title("000001SH Momentum in 2023")
             data['2023']['close'].plot(label='close')
@@ -50,11 +54,15 @@ class DataLoader:
             y=data['2023']['return'].resample('W').std()
             plt.bar(range(len(y)),y)
             plt.subplots_adjust(hspace=1)
-            plt.show()
+            # plt.show()
+            return fig
+
         elif method=='ACF':
+            fig = plt.figure
             monthly_return=data['return'].resample('M').prod()
             plot_acf(monthly_return)
             plt.show()
+            return fig
 
     def reshape(self): #根据模型reshape data格式
         data=self.data.copy()
