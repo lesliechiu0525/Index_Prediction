@@ -11,10 +11,11 @@ log_info={
 }
 token="867c099a7df5193a7bc3b3d9f6311307a3d1885fbb39888f44754c86"
 ts.set_token(token)
+pro = ts.pro_api()
 
 def get_data():
     today = time.strftime('%Y%m%d', time.localtime())
-    df=ts.pro_bar(ts_code='000001.SH',trade_date=today)
+    df = pro.index_daily(ts_code='000001.SH', start_date='20000105', end_date=today)
     return df
 def upload(df):
     bridge = Bridge()
