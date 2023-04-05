@@ -1,3 +1,4 @@
+'''Create ModelUniverse'''
 import torch
 from torch import nn
 import pandas as pd
@@ -5,6 +6,8 @@ from pylab import plt, mpl
 import numpy as np
 plt.style.use("seaborn")
 mpl.rcParams['font.family'] = 'serif'
+
+'''数据转化'''
 class DataTransform:
     def __init__(self):
         self.model_type = None
@@ -41,7 +44,7 @@ class DataTransform:
                           torch.from_numpy(x_val).to(torch.float32),
             x_val = torch.unsqueeze(x_val,dim=0)
             return x,y,x_val,x_min,x_max,res,res_norm
-
+'''编写各类备选time series model via neural networks'''
 class LSTM(nn.Module):
     def __init__(self,input_size,output_size,num_layers):
         super(LSTM,self).__init__()
@@ -106,8 +109,7 @@ class ResidualLSTM(nn.Module):
         out = self.fc(out[:,-1,:])
         return out
 '''Transformer'''
-
-
+'''PositionalEncoding by TorchSource according to Attention(2017)'''
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model, max_len=5000):
         super(PositionalEncoding, self).__init__()
@@ -125,7 +127,7 @@ class PositionalEncoding(nn.Module):
         x = x + self.pe[:, :x.size(1)]
         return self.dropout(x)
 
-
+'''create a simple sturcture Transformer for time MultiVariables time series'''
 class TransformerTimeSeries(nn.Module):
     def __init__(self, input_size, output_size,num_layers):
         super(TransformerTimeSeries, self).__init__()
@@ -148,6 +150,7 @@ class TransformerTimeSeries(nn.Module):
         out = self.out_fc(x[:, -1, :])
         return out
 
+'''Model for train and evaluate with any model type input'''
 class Model:
     def __init__(self):
         self.instance = None
@@ -169,7 +172,7 @@ class Model:
         self.model_type = model_type
         self.instance = self.dictionary[self.model_type]
         self.data = data
-
+    '''fit the parameters'''
     def train(self,Layers,EPOCH_NUM,LR,FACTORS):
         self.Layers = Layers
         self.EPOCH_NUM = EPOCH_NUM
@@ -245,7 +248,9 @@ class Model:
         string_valid = f'valid-mse average:{sum([i[1] for i in mseloss_alist])/len(mseloss_alist)}'
         return string_train +' , '+ string_valid
 
-
+'''Finally we get the powerful ModelUniverse'''
+'''ModelUniverse 是在我的架构下模型代码终点对象 他将所有模型函数集成到func方法'''
+'''并且通过两个Link属性可以通过func方法向其他两个部分的实例传递信息'''
 class ModelUniverse:
     def __init__(self):
         self.model = None

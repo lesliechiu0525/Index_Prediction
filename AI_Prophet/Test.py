@@ -1,9 +1,6 @@
-import numpy as np
 import warnings
 warnings.filterwarnings('ignore')
-import random
 import time
-import pandas as pd
 from Origin.log import Log_System,Bridge
 from Origin.Data import DataLoader
 from Origin.ModelSimple import ModelUniverse
@@ -16,10 +13,8 @@ log_info={
     'ip':'47.93.17.235',
     'database':'Account'
 }
-param={
-    'EPOCH_NUM': 1000,
-    'LR': 0.01
-}
+'''create instance in the environment'''
+'''data load'''
 dataloader=DataLoader()
 info=log_info.copy()
 info['database']='IndexDatabase'
@@ -27,26 +22,34 @@ index_bridge=Bridge()
 index_bridge.log(**info)
 dataloader.set_bridge(index_bridge)
 df = dataloader.fetch_data()
+'''ModelUniverse is the kernel of the whole program'''
 model_universe = ModelUniverse()
 model_universe.set(df)
+'''strategy and backtrader load'''
 strategy = Strategy()
 backtrader = BackTrade()
 df = df.resample('M').last()
 backtrader.fit(df, factor_names=['vol'])
 backtrader.set_strategy(strategy)
+'''assistant is ready'''
 assistant = Assistant()
+'''Link'''
 model_universe.LinkAssistant = assistant
 model_universe.LinkStrategy = strategy
 
-
+'''gradio framework with multi tabs'''
 with  gr.Blocks(theme=gr.themes.Soft()) as demo:
     gr.Markdown("<h1><center>AI_Prophet is All You Need In Investment</center></h1>")
+    '''可视化分析Tabs 连接dataloader类的basic_plot方法'''
     with gr.Tab("Visual Analysis"):
         choice = ['performance', 'analysis','ACF']
         method_input = gr.Radio(choices=choice,label='Method')
         plot_output = gr.Plot()
         plot_button = gr.Button("Plot")
+        plot_button.click(dataloader.basic_plot, inputs=method_input, outputs=plot_output)
 
+    '''核心Tabs ModelPrediction 连接model_universe类的func方法'''
+    '''并且通过func方法的执行向已连接的assistant strategy实例更新属性'''
     with gr.Tab("Model Prediction"):
         Factors_Input = gr.CheckboxGroup(['Return','Volatility','Volume'],label='Factors')
         choice = ['RNN','GRU','LSTM','ResidualLSTM','TransformerTimeSeries']
@@ -64,6 +67,8 @@ with  gr.Blocks(theme=gr.themes.Soft()) as demo:
                                    Layers_input,Epoch_input, LR_input,EVA_input], \
                            outputs=[Loss_output, Pre_output,Eva_output])
 
+    '''StrategyTabs 负责将策略执行出来 并给出回测结果 使用run方法 '''
+    '''Backtrader内核strategy实例与ModelUniverse的预测结果连接'''
     with gr.Tab("Strategy"):
         gr.Markdown('<h3 style="text-align:center;font-weight:bold;">\
         !!Pay attention to Model Predict Firstly!!</h3>')
@@ -78,6 +83,8 @@ with  gr.Blocks(theme=gr.themes.Soft()) as demo:
                            inputs=[Limit_input, Percent_input], \
                            outputs=[Performance_out,Dataframe_out])
 
+
+    '''Guides Tabs 负责做简单的机器人引导 assistant的结果属性与ModelUniverse的预测结果连接'''
     with gr.Tab('Guides'):
         chatbot = gr.Chatbot(label='AI_Prophet 🤖')
         msg = gr.Textbox(label='Question',info='How can I help you?')
@@ -101,10 +108,11 @@ with  gr.Blocks(theme=gr.themes.Soft()) as demo:
         for quantitative analysis of the Chinese stock market,\
          based on  time series neural network models')
         gr.HTML('<img src="Asset.png">')
-    plot_button.click(dataloader.basic_plot, inputs=method_input, outputs=plot_output)
+
 
 if __name__=='__main__':
     demo.title = "AI_Prophet 🤖"
     demo.launch()
+    '''run in local host or in remote sever'''
     # demo.launch(server_name="0.0.0.0", server_port=7860, \
     #              share=False,auth=('lesliechiu','0525'))

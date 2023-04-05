@@ -1,6 +1,5 @@
-import pandas as pd
+'''DatInsertShell for update my project mysql with the tushare datbases'''
 from Origin.log import Bridge
-from sqlalchemy import create_engine
 import time
 import tushare as ts
 log_info={
@@ -28,7 +27,6 @@ def run_script():
     upload(df)
     print('Data uploaded successfully.')
 
-# 设置定时任务，每天运行一次
 while True:
     current_time = time.strftime('%H:%M:%S')
     if current_time == '00:00:00':

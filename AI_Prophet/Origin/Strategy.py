@@ -1,9 +1,10 @@
 '''define strategy and backtrade'''
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import random
+from pylab import plt, mpl
 
+'''Strategy which is link to the ModelUniverse api'''
 class Strategy:
     def __init__(self):
         self.pred = None
@@ -15,7 +16,7 @@ class Strategy:
         else:
             return [random.choice([1,-1]) for i in range(x.shape[0])]
 
-
+'''BackTrade is to put strategy in history market'''
 class BackTrade:
     def __init__(self):
         self.data = None
@@ -38,6 +39,7 @@ class BackTrade:
         data = self.data.copy()
         pred = self.strategy.generate(data[factor_names])
         data = data.iloc[12:,:]
+        '''根据全预测值大于1的输出信号为1 否则为-1'''
         data['signal'] = [1 if i>1 else -1 for i in pred]
         account.loc[0] = ['day0',1000,0,1000,0]
         for idx in range(data.shape[0]):
@@ -78,7 +80,7 @@ class BackTrade:
                         #       'open short position with cost{}'.format(info['price']))
 
             value = cash+position*info['price']
-            account.loc[idx+1] = [info['trade_date'],cash,position,value,cost]
+            account.loc[idx+1] = [info['trade_date'],cash,position,value,cost]#
         account['return'] = account['value']/account.shift(1)['value']
         account.dropna(how='any',inplace=True)
         '''strategy performance plot'''

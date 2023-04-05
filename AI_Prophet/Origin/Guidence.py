@@ -1,3 +1,4 @@
+'''指引部分通过Assistant对象的reply进行'''
 import pandas as pd
 import random
 Wordbase = pd.read_csv('words.csv')
@@ -12,6 +13,7 @@ class Assistant:
         }
         self.Words = Wordbase
     def set(self,result):
+        '''"记住"result'''
         if result:
             str_list = result.split(',')
             str_list = str_list[1:]

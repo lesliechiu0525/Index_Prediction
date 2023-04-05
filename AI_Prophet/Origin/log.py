@@ -27,6 +27,8 @@ class Bridge:
         print('The bridge is down')
         self.status = False
 
+
+'''这部分没有实接'''
 '''本地化登录系统'''
 class Log_System:
     def __init__(self):

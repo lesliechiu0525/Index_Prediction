@@ -1,3 +1,4 @@
+'''创建dataloader类用于高级数据fetch data 与 visual部分'''
 import pandas as pd
 from pylab import plt, mpl
 import numpy as np
@@ -8,6 +9,7 @@ class DataLoader:
     def __init__(self):
         self.data=None
         self.bridge=None
+        '''底层通过log的bridge类进行download'''
     def set_bridge(self,bridge):
         self.bridge=bridge
 
