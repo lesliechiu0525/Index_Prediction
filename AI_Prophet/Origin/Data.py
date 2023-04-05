@@ -13,6 +13,7 @@ class DataLoader:
 
     def fetch_data(self):
         data=self.bridge.download(table_name='IndexDaily').reset_index(drop=True)
+        data = data.sort_values(by='trade_date',ascending=True)
         data['trade_date']=pd.to_datetime(data['trade_date'])
         data.index = data['trade_date']
         data['return'] = data['close']/data.shift(1)['close']

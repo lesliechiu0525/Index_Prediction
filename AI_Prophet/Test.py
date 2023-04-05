@@ -43,23 +43,26 @@ with  gr.Blocks(theme=gr.themes.Soft()) as demo:
     gr.Markdown("<h1><center>AI_Prophet is All You Need In Investment</center></h1>")
     with gr.Tab("Visual Analysis"):
         choice = ['performance', 'analysis','ACF']
-        method_input = gr.Radio(choices=choice)
+        method_input = gr.Radio(choices=choice,label='Method')
         plot_output = gr.Plot()
         plot_button = gr.Button("Plot")
 
     with gr.Tab("Model Prediction"):
         Factors_Input = gr.CheckboxGroup(['Return','Volatility','Volume'],label='Factors')
-        choice = ['RNN','GRU','LSTM']
+        choice = ['RNN','GRU','LSTM','ResidualLSTM','TransformerTimeSeries']
         Type_input = gr.Radio(choices=choice,label='ModelType')
+        Layers_input = inputs = gr.inputs.Slider(minimum=1, maximum=5, step=1, default=1, label="Layers")
         Epoch_input = gr.Slider(minimum=101,maximum=501,label='EPOCH')
         LR_input = gr.Slider(minimum=0.001,maximum=0.1,label='LearningRate')
+        EVA_input = gr.Checkbox(label='Evaluation',info='This can maybe take a lot of time')
         Loss_output = gr.Plot(label='Loss Figure')
         Pre_output = gr.Text(label='Prediction')
+        Eva_output = gr.Text(label='KFold Evaluation')
         image_button = gr.Button("Predict")
         image_button.click(model_universe.func, \
                            inputs=[Factors_Input, Type_input, \
-                                   Epoch_input, LR_input], \
-                           outputs=[Loss_output, Pre_output])
+                                   Layers_input,Epoch_input, LR_input,EVA_input], \
+                           outputs=[Loss_output, Pre_output,Eva_output])
 
     with gr.Tab("Strategy"):
         gr.Markdown('<h3 style="text-align:center;font-weight:bold;">\
@@ -102,6 +105,6 @@ with  gr.Blocks(theme=gr.themes.Soft()) as demo:
 
 if __name__=='__main__':
     demo.title = "AI_Prophet 🤖"
-    demo.launch(auth=('lesliechiu','0525'))
+    demo.launch()
     # demo.launch(server_name="0.0.0.0", server_port=7860, \
     #              share=False,auth=('lesliechiu','0525'))
