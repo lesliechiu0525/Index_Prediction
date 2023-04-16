@@ -10,9 +10,15 @@ from Origin.Guidence import Assistant
 log_info={
     "username":'adim',
     'password':'Xiao15825982477#',
-    'ip':'47.93.17.235',
-    'database':'Account'
+    'ip':'82.157.156.182',
+    'database':'IndexDatabase'
 }
+# log_info={
+#     "username":'adim',
+#     'password':'Xiao15825982477#',
+#     'ip':'47.93.17.235',
+#     'database':'Account'
+# }
 '''create instance in the environment'''
 '''data load'''
 dataloader=DataLoader()
@@ -22,6 +28,7 @@ index_bridge=Bridge()
 index_bridge.log(**info)
 dataloader.set_bridge(index_bridge)
 df = dataloader.fetch_data()
+print(df)
 '''ModelUniverse is the kernel of the whole program'''
 model_universe = ModelUniverse()
 model_universe.set(df)
