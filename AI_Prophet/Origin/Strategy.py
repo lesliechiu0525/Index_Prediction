@@ -116,6 +116,7 @@ class BackTrade:
         func = lambda x: x.apply(lambda x0: '{:.3}'.format(x0))
         summary[['月收益波动率','年化夏普比率']] = \
             summary[['月收益波动率','年化夏普比率']].apply(func)
+        print(summary)
         return fig,summary
 
 

@@ -3,12 +3,9 @@ from Origin.log import Bridge
 import time
 import tushare as ts
 log_info={
-    "username":'adim',
-    'password':'Xiao15825982477#',
-    'ip':'47.93.17.235',
-    'database':'Index',
+    'your mysql info'
 }
-token="867c099a7df5193a7bc3b3d9f6311307a3d1885fbb39888f44754c86"
+token= 'your tushare token'
 ts.set_token(token)
 pro = ts.pro_api()
 

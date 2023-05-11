@@ -9,17 +9,12 @@ warnings.filterwarnings('ignore')
 import time
 from Origin.log import Log_System,Bridge
 from Origin.Data import DataLoader
-log_info={
-    "username":'adim',
-    'password':'Xiao15825982477#',
-    'ip':'47.93.17.235',
-    'database':'Account'
-}
+
 log_info0={
-    "username":'adim',
-    'password':'Xiao15825982477#',
-    'ip':'82.157.156.182',
-    'database':'IndexDatabase'
+    "username":name,
+    'password':your_password,
+    'ip':your_ip,
+    'database':your_database_name
 }
 dataloader=DataLoader()
 info=log_info.copy()

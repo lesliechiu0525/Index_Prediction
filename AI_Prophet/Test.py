@@ -7,18 +7,6 @@ from Origin.ModelSimple import ModelUniverse
 import gradio as gr
 from Origin.Strategy import Strategy,BackTrade
 from Origin.Guidence import Assistant
-log_info={
-    "username":'adim',
-    'password':'Xiao15825982477#',
-    'ip':'82.157.156.182',
-    'database':'IndexDatabase'
-}
-# log_info={
-#     "username":'adim',
-#     'password':'Xiao15825982477#',
-#     'ip':'47.93.17.235',
-#     'database':'Account'
-# }
 '''create instance in the environment'''
 '''data load'''
 dataloader=DataLoader()
@@ -121,5 +109,3 @@ if __name__=='__main__':
     demo.title = "AI_Prophet 🤖"
     demo.launch()
     '''run in local host or in remote sever'''
-    # demo.launch(server_name="0.0.0.0", server_port=7860, \
-    #              share=False,auth=('lesliechiu','0525'))
